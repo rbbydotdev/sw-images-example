@@ -5,9 +5,11 @@ import App from './App.tsx'
 
 // Register service worker with base path support
 if ('serviceWorker' in navigator) {
-  const basePath = __BASE_PATH__.replace(/\/$/, ''); // Remove trailing slash
-  navigator.serviceWorker.register(`${basePath}/sw.js`, {
-    scope: basePath || '/',
+  const basePath = __BASE_PATH__; // Keep trailing slash for scope
+  const swPath = basePath.endsWith('/') ? `${basePath}sw.js` : `${basePath}/sw.js`;
+
+  navigator.serviceWorker.register(swPath, {
+    scope: basePath,
   });
 }
 
