@@ -190,7 +190,10 @@ function ImageGallery() {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="aspect-4/3 bg-slate-800/50 rounded-xl animate-pulse" />
+                <div
+                  key={i}
+                  className="aspect-4/3 rounded-xl animate-pulse bg-linear-to-br from-slate-800 via-slate-700 to-slate-600"
+                />
               ))}
             </div>
           ) : images.length === 0 ? (

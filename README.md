@@ -1,6 +1,7 @@
 # SW Images Example
 
-A modern image gallery with drag-and-drop upload, built with React, Service Workers, and IndexedDB.
+A example exhibiting hono in the service worker, uploading, storing, converting image files in the service-worker.
+
 
 ## Features
 
@@ -12,6 +13,14 @@ A modern image gallery with drag-and-drop upload, built with React, Service Work
 - ⚡ **Fast Loading**: Cache API ensures instant image loading
 - 🎨 **WebP Conversion**: Automatically converts PNG/JPG to WebP for smaller file sizes
 - 💾 **Service Worker**: All processing happens client-side using service workers
+
+### From the blog post
+<a href="https://blog.rbby.dev/posts/a-server-in-your-browser-with-hono/"><img src="/blogshot.png" alt="blog screenshot" /></a>
+
+
+
+![screenshot](/screenshot.png)
+
 
 ## Tech Stack
 
