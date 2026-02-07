@@ -2,6 +2,9 @@
 
 A example exhibiting hono in the service worker, uploading, storing, converting image files in the service-worker.
 
+## DEMO
+
+[https://rbby.dev/sw-images-example](rbby.dev/sw-images-example)
 
 ## Features
 
