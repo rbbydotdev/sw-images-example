@@ -83,11 +83,22 @@ app.use("*", async (c, next) => {
   );
   await next();
 });
+const IMAGE_CACHE_NAME = "image-cache-v1";
+
 const SWHandlers = {
   Image: app.get("/image/:id", async (c) => {
     const { id } = c.req.param();
+    const requestUrl = c.req.url;
 
-    // Retrieve the image data from IndexedDB
+    // Try to get from Cache API first
+    const cache = await caches.open(IMAGE_CACHE_NAME);
+    const cachedResponse = await cache.match(requestUrl);
+
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    // If not in cache, retrieve from IndexedDB
     const imageData = await get(id);
 
     if (!imageData) {
@@ -99,13 +110,18 @@ const SWHandlers = {
     if (id.endsWith(".gif")) contentType = "image/gif";
     // Most images will be WebP after conversion
 
-    // Return the image data as a response
-    return new Response(imageData as ArrayBuffer, {
+    // Create response with image data
+    const response = new Response(imageData as ArrayBuffer, {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=31536000",
       },
     });
+
+    // Store in cache for future requests
+    await cache.put(requestUrl, response.clone());
+
+    return response;
   }),
   Images: app.get("/images", async (c) => {
     const images = await handleGetImages();
@@ -142,6 +158,16 @@ const SWHandlers = {
 
     // Delete the image from IndexedDB
     await del(id);
+
+    // Try to delete from Cache API
+    try {
+      const cache = await caches.open(IMAGE_CACHE_NAME);
+      const imageUrl = new URL(`/sw/image/${id}`, c.req.url).href;
+      await cache.delete(imageUrl);
+    } catch (error) {
+      console.error("Failed to delete from cache:", error);
+      // Continue even if cache deletion fails
+    }
 
     return c.json({ success: true, message: "Image deleted" });
   }),
