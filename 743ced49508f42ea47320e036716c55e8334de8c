@@ -1,0 +1,25 @@
+src/App.tsx
+  3a3f3459309c7941 83-91,93-102,223-226,228-234
+src/sw.ts
+  3a3f3459309c7941 6,8,13-62,64-68,70-76,89-107,111-112,126-127,133-147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "743ced49508f42ea47320e036716c55e8334de8c",
+  "prompts": {
+    "3a3f3459309c7941": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a95780b9-3507-4b77-8140-d9f43b1d2a7a",
+        "model": "claude-sonnet-4-5-20250929"
+      },
+      "human_author": "robby <robby.polana+github@gmail.com>",
+      "messages": [],
+      "total_additions": 149,
+      "total_deletions": 21,
+      "accepted_lines": 133,
+      "overriden_lines": 2
+    }
+  }
+}
