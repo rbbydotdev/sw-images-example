@@ -1,0 +1,29 @@
+vite.config.sw.ts
+  3a3f3459309c7941 1-20
+package.json
+  3a3f3459309c7941 9
+index.html
+  3a3f3459309c7941 12-16
+src/App.tsx
+  3a3f3459309c7941 5,7-8,10-14,16,18-54,56-57,64-66,68-71,74-75,79-91,94-98,100-107,109-113,115-121,123-139,141-144,147-151,153-159,161-166,168-192,194-195,197-204,210-215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "678b416fce5932a137283711d25161b8695f79c6",
+  "prompts": {
+    "3a3f3459309c7941": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a95780b9-3507-4b77-8140-d9f43b1d2a7a",
+        "model": "claude-sonnet-4-5-20250929"
+      },
+      "human_author": "robby <robby.polana+github@gmail.com>",
+      "messages": [],
+      "total_additions": 260,
+      "total_deletions": 50,
+      "accepted_lines": 204,
+      "overriden_lines": 41
+    }
+  }
+}
