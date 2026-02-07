@@ -1,0 +1,21 @@
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "cc143ff4e86460368614bba08e5556b906b78d2f",
+  "prompts": {
+    "3a3f3459309c7941": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a95780b9-3507-4b77-8140-d9f43b1d2a7a",
+        "model": "claude-sonnet-4-5-20250929"
+      },
+      "human_author": "robby <robby.polana+github@gmail.com>",
+      "messages": [],
+      "total_additions": 107,
+      "total_deletions": 32,
+      "accepted_lines": 45,
+      "overriden_lines": 2
+    }
+  }
+}
