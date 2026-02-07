@@ -1,0 +1,23 @@
+src/sw.ts
+  3a3f3459309c7941 86-87,91-99,101,113-114,120-124,162-171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.0.42",
+  "base_commit_sha": "d644fee805fde0db0622a64f4f3eded5827e838e",
+  "prompts": {
+    "3a3f3459309c7941": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a95780b9-3507-4b77-8140-d9f43b1d2a7a",
+        "model": "claude-sonnet-4-5-20250929"
+      },
+      "human_author": "robby <robby.polana+github@gmail.com>",
+      "messages": [],
+      "total_additions": 29,
+      "total_deletions": 3,
+      "accepted_lines": 29,
+      "overriden_lines": 0
+    }
+  }
+}
