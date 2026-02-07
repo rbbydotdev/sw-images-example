@@ -18,8 +18,7 @@ function ImageGallery() {
   } = useQuery({
     queryKey: ["images"],
     queryFn: async () => {
-      // return SWClient.sw.images.$get().then((r) => r.json());
-      return fetch("/sw/images").then((r) => r.json());
+      return SWClient.sw.images.$get().then((r) => r.json());
     },
   });
 
@@ -79,6 +78,26 @@ function ImageGallery() {
   const closeModal = () => {
     dialogRef.current?.close();
     setSelectedImage(null);
+  };
+
+  const deleteImage = async (imageUrl: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening modal when clicking delete
+
+    // Extract the image ID from the URL (e.g., "/sw/image/1234567890-photo.webp" -> "1234567890-photo.webp")
+    const id = imageUrl.split("/").pop();
+
+    if (!id) return;
+
+    try {
+      const response = await SWClient.sw.image[":id"].$delete({ param: { id } });
+
+      if (response.ok) {
+        // Refetch images after successful delete
+        refetch();
+      }
+    } catch (error) {
+      console.error("Failed to delete image:", error);
+    }
   };
 
   return (
@@ -201,6 +220,18 @@ function ImageGallery() {
                   onClick={() => openModal(imageUrl)}
                 >
                   <img src={imageUrl} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover" />
+
+                  {/* Delete Button */}
+                  <button
+                    onClick={(e) => deleteImage(imageUrl, e)}
+                    className="absolute top-2 right-2 p-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg hover:scale-110 z-10"
+                    aria-label="Delete image"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <p className="text-white text-sm font-medium">Image {index + 1}</p>

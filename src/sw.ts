@@ -3,17 +3,77 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { handle } from "hono/service-worker";
+import { del, get, keys, set } from "idb-keyval";
 import { z } from "zod";
+
 const app = new Hono().basePath("/sw");
 
 declare const self: ServiceWorkerGlobalScope;
 
-function handleImageUpload(filePath: string, data: ArrayBuffer): Promise<string> {
-  return Promise.resolve(`/images/${filePath}`);
+async function convertToWebP(arrayBuffer: ArrayBuffer, fileName: string): Promise<ArrayBuffer> {
+  // Check if the file is PNG or JPG
+  const fileExt = fileName.toLowerCase();
+  const shouldConvert = fileExt.endsWith(".png") || fileExt.endsWith(".jpg") || fileExt.endsWith(".jpeg");
+
+  if (!shouldConvert) {
+    // Return original data for non-convertible formats
+    return arrayBuffer;
+  }
+
+  try {
+    // Create a blob from the array buffer
+    const blob = new Blob([arrayBuffer]);
+
+    // Create an ImageBitmap from the blob
+    const imageBitmap = await createImageBitmap(blob);
+
+    // Create an OffscreenCanvas with the same dimensions
+    const canvas = new OffscreenCanvas(imageBitmap.width, imageBitmap.height);
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+      throw new Error("Failed to get 2D context");
+    }
+
+    // Draw the image onto the canvas
+    ctx.drawImage(imageBitmap, 0, 0);
+
+    // Convert to WebP with quality 0.9
+    const webpBlob = await canvas.convertToBlob({
+      type: "image/webp",
+      quality: 0.9,
+    });
+
+    // Convert blob back to ArrayBuffer
+    return await webpBlob.arrayBuffer();
+  } catch (error) {
+    console.error("Failed to convert image to WebP:", error);
+    // Return original data if conversion fails
+    return arrayBuffer;
+  }
 }
-function handleGetImages(): Promise<string[]> {
-  const fakeImages = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${i + 1}/400/300`);
-  return Promise.resolve(fakeImages);
+
+async function handleImageUpload(filePath: string, data: ArrayBuffer): Promise<string> {
+  // Generate a unique ID for the image (use .webp extension)
+  const baseFileName = filePath.replace(/\.(png|jpg|jpeg|gif|webp)$/i, "");
+  const id = `${Date.now()}-${baseFileName}.webp`;
+
+  // Convert PNG/JPG to WebP
+  const webpData = await convertToWebP(data, filePath);
+
+  // Store the converted image data in IndexedDB
+  await set(id, webpData);
+
+  // Return the path to access this image
+  return `/sw/image/${id}`;
+}
+
+async function handleGetImages(): Promise<string[]> {
+  // Get all keys from IndexedDB
+  const imageKeys = await keys();
+
+  // Return URLs pointing to each image
+  return imageKeys.map((key) => `/sw/image/${key}`);
 }
 
 app.use("*", async (c, next) => {
@@ -24,10 +84,32 @@ app.use("*", async (c, next) => {
   await next();
 });
 const SWHandlers = {
-  Hello: app.get("/hello", (c) => c.text("Hello World")),
+  Image: app.get("/image/:id", async (c) => {
+    const { id } = c.req.param();
+
+    // Retrieve the image data from IndexedDB
+    const imageData = await get(id);
+
+    if (!imageData) {
+      return c.json({ error: "Image not found" }, 404);
+    }
+
+    // Determine the content type from the filename
+    let contentType = "image/webp";
+    if (id.endsWith(".gif")) contentType = "image/gif";
+    // Most images will be WebP after conversion
+
+    // Return the image data as a response
+    return new Response(imageData as ArrayBuffer, {
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=31536000",
+      },
+    });
+  }),
   Images: app.get("/images", async (c) => {
-    const fakeImages = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${i + 1}/400/300`);
-    return c.json(fakeImages);
+    const images = await handleGetImages();
+    return c.json(images);
   }),
   Upload: app.post(
     "/upload",
@@ -41,12 +123,28 @@ const SWHandlers = {
       try {
         const { file } = c.req.valid("form");
         const arrayBuffer = await file.arrayBuffer();
-        return c.json({ path: await handleImageUpload(file.name, arrayBuffer) });
+        const path = await handleImageUpload(file.name, arrayBuffer);
+        return c.json({ path });
       } catch (error) {
         throw error;
       }
     },
   ),
+  Delete: app.delete("/image/:id", async (c) => {
+    const { id } = c.req.param();
+
+    // Check if the image exists
+    const imageData = await get(id);
+
+    if (!imageData) {
+      return c.json({ error: "Image not found" }, 404);
+    }
+
+    // Delete the image from IndexedDB
+    await del(id);
+
+    return c.json({ success: true, message: "Image deleted" });
+  }),
 };
 
 // Service Worker Event Handlers
