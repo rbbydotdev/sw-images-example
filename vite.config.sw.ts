@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 
 // Vite config for building the service worker
 export default defineConfig({
+  define: {
+    __BASE_PATH__: JSON.stringify(process.env.BASE_PATH || '/'),
+  },
   build: {
     lib: {
       entry: 'src/sw.ts',

@@ -1,73 +1,62 @@
-# React + TypeScript + Vite
+# SW Images Example
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern image gallery with drag-and-drop upload, built with React, Service Workers, and IndexedDB.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- 📤 **Drag & Drop Upload**: Upload images by dragging them onto the page or using the file picker
+- 🖼️ **Image Gallery**: View all your uploaded images in a responsive grid
+- 🔍 **Image Modal**: Click any image to view it in full size
+- 🗑️ **Delete Images**: Remove images with a single click
+- 📦 **Offline Storage**: Images stored in IndexedDB persist across sessions
+- ⚡ **Fast Loading**: Cache API ensures instant image loading
+- 🎨 **WebP Conversion**: Automatically converts PNG/JPG to WebP for smaller file sizes
+- 💾 **Service Worker**: All processing happens client-side using service workers
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool
+- **TailwindCSS** - Styling
+- **Hono** - Service worker routing
+- **IndexedDB** (via idb-keyval) - Image storage
+- **TanStack Query** - Data fetching
+- **OffscreenCanvas** - Image conversion
 
-## Expanding the ESLint configuration
+## Development
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```bash
+# Install dependencies
+npm install
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+# Build service worker
+npm run build:sw
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# Start development server
+npm run dev
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Build for production
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Deployment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+This project is configured for GitHub Pages deployment. Push to the `master` branch to trigger automatic deployment.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+For local development, the app runs at `http://localhost:5173/`.
+
+For GitHub Pages, it will be available at `https://yourusername.github.io/sw-images-example/`.
+
+## How It Works
+
+1. **Upload**: Images are uploaded via drag-and-drop or file selection
+2. **Conversion**: PNG/JPG images are automatically converted to WebP using OffscreenCanvas
+3. **Storage**: Images are stored in IndexedDB with unique IDs
+4. **Caching**: First load stores images in Cache API for instant subsequent loads
+5. **Service Worker**: Hono-based service worker handles all image serving and routing
+6. **Delete**: Removes images from both IndexedDB and Cache API
+
+## License
+
+MIT

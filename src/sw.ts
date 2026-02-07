@@ -6,7 +6,11 @@ import { handle } from "hono/service-worker";
 import { del, get, keys, set } from "idb-keyval";
 import { z } from "zod";
 
-const app = new Hono().basePath("/sw");
+// Construct the base path: for GitHub Pages it will be "/sw-images-example/sw", for local it will be "/sw"
+const basePath = __BASE_PATH__.replace(/\/$/, ''); // Remove trailing slash
+const swBasePath = `${basePath}/sw`;
+
+const app = new Hono().basePath(swBasePath);
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -65,7 +69,7 @@ async function handleImageUpload(filePath: string, data: ArrayBuffer): Promise<s
   await set(id, webpData);
 
   // Return the path to access this image
-  return `/sw/image/${id}`;
+  return `${swBasePath}/image/${id}`;
 }
 
 async function handleGetImages(): Promise<string[]> {
@@ -73,7 +77,7 @@ async function handleGetImages(): Promise<string[]> {
   const imageKeys = await keys();
 
   // Return URLs pointing to each image
-  return imageKeys.map((key) => `/sw/image/${key}`);
+  return imageKeys.map((key) => `${swBasePath}/image/${key}`);
 }
 
 app.use("*", async (c, next) => {
@@ -162,7 +166,7 @@ const SWHandlers = {
     // Try to delete from Cache API
     try {
       const cache = await caches.open(IMAGE_CACHE_NAME);
-      const imageUrl = new URL(`/sw/image/${id}`, c.req.url).href;
+      const imageUrl = new URL(`${swBasePath}/image/${id}`, c.req.url).href;
       await cache.delete(imageUrl);
     } catch (error) {
       console.error("Failed to delete from cache:", error);
