@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { SWClient } from "./SwClient";
 
 const queryClient = new QueryClient();
@@ -7,6 +7,8 @@ const queryClient = new QueryClient();
 function ImageGallery() {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   // Fetch images using TanStack Query
   const {
@@ -16,13 +18,8 @@ function ImageGallery() {
   } = useQuery({
     queryKey: ["images"],
     queryFn: async () => {
-      // Using fake data for now
-      const fakeImages = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${i + 1}/400/300`);
-      return fakeImages;
-
-      // Real implementation would be:
-      // const response = await fetch('/images');
-      // return response.json();
+      // return SWClient.sw.images.$get().then((r) => r.json());
+      return fetch("/sw/images").then((r) => r.json());
     },
   });
 
@@ -72,6 +69,16 @@ function ImageGallery() {
       setUploadStatus("Upload failed. Please try again.");
       setTimeout(() => setUploadStatus(""), 3000);
     }
+  };
+
+  const openModal = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    dialogRef.current?.showModal();
+  };
+
+  const closeModal = () => {
+    dialogRef.current?.close();
+    setSelectedImage(null);
   };
 
   return (
@@ -190,7 +197,8 @@ function ImageGallery() {
               {images.map((imageUrl, index) => (
                 <div
                   key={index}
-                  className="group relative aspect-4/3 bg-slate-800 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-blue-900/20 transition-all duration-300 hover:scale-[1.02]"
+                  className="group relative aspect-4/3 bg-slate-800 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-blue-900/20 transition-all duration-300 hover:scale-[1.02] cursor-pointer"
+                  onClick={() => openModal(imageUrl)}
                 >
                   <img src={imageUrl} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -203,6 +211,34 @@ function ImageGallery() {
             </div>
           )}
         </div>
+
+        {/* Image Modal */}
+        <dialog
+          ref={dialogRef}
+          className="w-full h-full max-w-full max-h-full sm:w-[95vw] sm:h-[95vh] sm:max-w-[95vw] sm:max-h-[95vh] bg-transparent backdrop:bg-black/90 p-0 m-auto"
+          onClick={(e) => {
+            // Close when clicking on the backdrop (the dialog itself, not its contents)
+            if (e.target === dialogRef.current) {
+              closeModal();
+            }
+          }}
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4">
+            {/* Close Button */}
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 p-3 bg-black/70 hover:bg-black/90 text-white rounded-full transition-colors backdrop-blur-sm shadow-xl"
+              aria-label="Close modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Image Container */}
+            {selectedImage && <img src={selectedImage} alt="Full size view" className="w-full h-full object-contain" />}
+          </div>
+        </dialog>
       </div>
     </div>
   );
