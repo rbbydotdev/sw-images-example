@@ -1,62 +1,217 @@
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { SWClient } from "./SwClient";
 
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import tailwindLogo from './assets/tailwind.svg'
+const queryClient = new QueryClient();
 
-export default function App() {
-  const [count, setCount] = useState(0);
+function ImageGallery() {
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string>("");
+
+  // Fetch images using TanStack Query
+  const {
+    data: images = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["images"],
+    queryFn: async () => {
+      // Using fake data for now
+      const fakeImages = Array.from({ length: 12 }, (_, i) => `https://picsum.photos/seed/${i + 1}/400/300`);
+      return fakeImages;
+
+      // Real implementation would be:
+      // const response = await fetch('/images');
+      // return response.json();
+    },
+  });
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    await uploadFiles(files);
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    await uploadFiles(files);
+  };
+
+  const uploadFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+
+    setUploadStatus("Uploading...");
+
+    try {
+      await Promise.all(
+        files.map((file) =>
+          SWClient.sw.upload.$post({
+            form: { file },
+          }),
+        ),
+      );
+
+      setUploadStatus(`Successfully uploaded ${files.length} image(s)!`);
+      setTimeout(() => setUploadStatus(""), 3000);
+
+      // Refetch images after upload
+      refetch();
+    } catch (error) {
+      setUploadStatus("Upload failed. Please try again.");
+      setTimeout(() => setUploadStatus(""), 3000);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <div className="text-center">
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex justify-center items-center gap-5 mb-5">
-            <a href="https://vite.dev" target="_blank" rel="noreferrer">
-              <img src={viteLogo} className="h-30 w-30 block align-middle hover:drop-shadow-lg transition-all" alt="Vite logo" />
-              <h1 className="text-4xl font-bold mt-4">Vite</h1>
-            </a>
-            <p className="text-5xl font-semibold">+</p>
-            <a href="https://react.dev" target="_blank" rel="noreferrer">
-              <img src={reactLogo} className="h-30 w-30 block align-middle hover:drop-shadow-lg transition-all animate-spin-slow" alt="React logo" />
-              <h1 className="text-4xl font-bold mt-4">React</h1>
-            </a>
-            <p className="text-5xl font-semibold">+</p>
-            <a href="https://tailwindcss.com" target="_blank" rel="noreferrer">
-              <img src={tailwindLogo} className="h-30 w-30 block align-middle hover:drop-shadow-lg transition-all" alt="Tailwind logo" />
-              <h1 className="text-4xl font-bold mt-4">Tailwind</h1>
-            </a>
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-5xl font-bold text-white mb-3 tracking-tight">Image Gallery</h1>
+          <p className="text-slate-400 text-lg">Upload and manage your images</p>
+        </div>
+
+        {/* Upload Area */}
+        <div
+          className={`
+            relative mb-12 rounded-2xl border-2 border-dashed transition-all duration-200
+            ${
+              isDragging
+                ? "border-blue-400 bg-blue-950/50 scale-[1.02]"
+                : "border-slate-600 bg-slate-800/50 hover:border-slate-500"
+            }
+          `}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <div className="p-12 text-center">
+            <div className="mb-6">
+              <svg
+                className="mx-auto h-16 w-16 text-slate-400"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
+                aria-hidden="true"
+              >
+                <path
+                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            <div className="mb-4">
+              <label
+                htmlFor="file-upload"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors cursor-pointer shadow-lg shadow-blue-900/50"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  />
+                </svg>
+                Choose Files
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileSelect}
+              />
+            </div>
+
+            <p className="text-slate-300 text-lg font-medium mb-2">or drag and drop images here</p>
+            <p className="text-slate-500 text-sm">PNG, JPG, GIF up to 10MB</p>
           </div>
         </div>
-        
-        <div className="bg-gray-800 p-12 rounded-xl">
-          <p className="text-7xl font-bold mb-8">{count}</p>
-          <div className="flex gap-6 justify-center">
-            <button
-              onClick={() => setCount(count + 1)}
-              className="bg-gray-700 px-6 py-3 rounded-lg hover:bg-gray-600 text-2xl font-bold"
-            >
-              +
-            </button>
-            <button
-              onClick={() => setCount(0)}
-              className="bg-gray-700 px-6 py-3 rounded-lg hover:bg-gray-600 text-lg font-bold"
-            >
-              Reset
-            </button>
-            <button
-              onClick={() => setCount(count - 1)}
-              className="bg-gray-700 px-6 py-3 rounded-lg hover:bg-gray-600 text-2xl font-bold"
-            >
-              -
-            </button>
+
+        {/* Upload Status */}
+        {uploadStatus && (
+          <div className="mb-8 p-4 bg-slate-800/80 border border-slate-700 rounded-xl text-center">
+            <p className="text-slate-200">{uploadStatus}</p>
           </div>
+        )}
+
+        {/* Gallery Grid */}
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-6">
+            Your Images
+            <span className="ml-3 text-sm font-normal text-slate-400">
+              ({images.length} {images.length === 1 ? "image" : "images"})
+            </span>
+          </h2>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="aspect-4/3 bg-slate-800/50 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          ) : images.length === 0 ? (
+            <div className="text-center py-16 px-4 bg-slate-800/30 rounded-2xl border border-slate-700/50">
+              <svg
+                className="mx-auto h-12 w-12 text-slate-600 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <p className="text-slate-400 text-lg">No images yet</p>
+              <p className="text-slate-500 text-sm mt-2">Upload some images to get started</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {images.map((imageUrl, index) => (
+                <div
+                  key={index}
+                  className="group relative aspect-4/3 bg-slate-800 rounded-xl overflow-hidden shadow-xl hover:shadow-2xl hover:shadow-blue-900/20 transition-all duration-300 hover:scale-[1.02]"
+                >
+                  <img src={imageUrl} alt={`Gallery image ${index + 1}`} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                      <p className="text-white text-sm font-medium">Image {index + 1}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-        
-        <p className="text-gray-500 text-base mt-8">
-          Edit <code className="bg-gray-800 px-3 py-1 rounded">src/App.tsx</code> to get started
-        </p>
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ImageGallery />
+    </QueryClientProvider>
   );
 }

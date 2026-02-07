@@ -6,13 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:sw": "vite build --config vite.config.sw.ts",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "@tanstack/react-query": "^5.90.20",
+    "hono": "^4.11.8",
     "idb-keyval": "^6.2.2",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
